@@ -18,7 +18,7 @@
 
 1. **准备环境**
 ```bash
-git clone <your-repo>
+git clone [<https://github.com/bhhnjjd/YouTube0>](https://github.com/bhhnjjd/YouTube0)
 cd YouTube
 cp .env.example .env
 ```
