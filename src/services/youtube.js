@@ -60,7 +60,11 @@ class YouTubeService {
       this.oauth2Client.setCredentials(tokens);
       
       const tokenPath = path.join(process.cwd(), 'youtube_token.json');
-      await fs.writeFile(tokenPath, JSON.stringify(tokens, null, 2));
+      await fs.writeFile(
+        tokenPath,
+        JSON.stringify(tokens, null, 2),
+        { mode: 0o600 }
+      );
       
       this.isAuthenticated = true;
       logger.info('YouTube认证成功');

@@ -11,6 +11,7 @@ const { body, validationResult } = require('express-validator');
 const YouTubeAutomation = require('../modules/automation');
 const queueService = require('../services/queue');
 const cacheService = require('../services/cache');
+const metricsService = require('../services/metrics');
 const { logger, ErrorHandler } = require('../utils/logger');
 const config = require('../config');
 
@@ -126,6 +127,22 @@ class WebApplication {
       } catch (error) {
         ErrorHandler.handle(error, 'API: 获取系统状态');
         res.status(500).json({ error: '获取系统状态失败' });
+      }
+    });
+
+    // 系统指标
+    router.get('/metrics', (req, res) => {
+      try {
+        const format = req.query.format === 'prometheus' ? 'prometheus' : 'json';
+        const data = metricsService.exportMetrics(format);
+        if (format === 'prometheus') {
+          res.type('text/plain').send(data);
+        } else {
+          res.type('application/json').send(data);
+        }
+      } catch (error) {
+        ErrorHandler.handle(error, 'API: 获取指标');
+        res.status(500).json({ error: '获取指标失败' });
       }
     });
 

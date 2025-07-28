@@ -8,6 +8,7 @@ class YouTubeAutomationUI {
 
     init() {
         this.loadSystemStatus();
+        this.loadMetrics();
         this.startStatusUpdates();
     }
 
@@ -58,6 +59,16 @@ class YouTubeAutomationUI {
             this.updateSystemStatus(data);
         } catch (error) {
             this.log(`加载系统状态失败: ${error.message}`, 'error');
+        }
+    }
+
+    async loadMetrics() {
+        try {
+            const response = await fetch('/api/metrics');
+            const text = await response.text();
+            document.getElementById('metrics').textContent = text;
+        } catch (error) {
+            this.log(`加载指标失败: ${error.message}`, 'error');
         }
     }
 
@@ -372,6 +383,7 @@ class YouTubeAutomationUI {
         // 定期更新系统状态
         setInterval(() => {
             this.loadSystemStatus();
+            this.loadMetrics();
         }, 30000); // 每30秒更新一次
     }
 }

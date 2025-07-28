@@ -52,6 +52,7 @@ npm run docker:dev
 - Web界面: http://localhost:3000
 - API文档: http://localhost:3000/api
 - 健康检查: http://localhost:3000/health
+- 指标监控: http://localhost:3000/api/metrics
 
 ### 方式二：本地部署
 
