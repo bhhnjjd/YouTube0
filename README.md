@@ -316,13 +316,13 @@ OPENAI_MODEL=your-model-name
 
 ## 📞 支持和社区
 
-- 🐛 问题报告: [GitHub Issues](https://github.com/your-repo/issues)
-- 📖 文档: [Wiki](https://github.com/your-repo/wiki)
-- 💬 讨论: [Discussions](https://github.com/your-repo/discussions)
+- 🐛 问题报告: [GitHub Issues](https://github.com/bhhnjjd/YouTube0/issues)
+- 📖 文档: [Wiki](https://github.com/bhhnjjd/YouTube0/wiki)
+- 💬 讨论: [Discussions](https://github.com/bhhnjjd/YouTube0/discussions)
 
 ## 📄 许可证
 
-MIT License - 详见 LICENSE 文件
+MIT License 
 
 ---
 
