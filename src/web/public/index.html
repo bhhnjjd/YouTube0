@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube全自动化视频制作系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- 头部 -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">YouTube全自动化视频制作系统</h1>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                    <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                    <span id="status-text" class="text-gray-600">系统状态检查中...</span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    上次更新: <span id="last-update">--</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 系统状态卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">今日视频数</p>
+                        <p id="video-count" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">队列任务</p>
+                        <p id="queue-count" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">自动化状态</p>
+                        <p id="automation-status" class="text-2xl font-bold text-yellow-600">停止</p>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">YouTube状态</p>
+                        <p id="youtube-status" class="text-2xl font-bold text-red-600">未认证</p>
+                    </div>
+                    <div class="p-3 bg-red-100 rounded-full">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主控制面板 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- 控制面板 -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">控制面板</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <button id="start-automation" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                            启动自动化
+                        </button>
+                        <button id="stop-automation" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                            停止自动化
+                        </button>
+                        <button id="run-once" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                            执行单次任务
+                        </button>
+                        <button id="analyze-trends" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
+                            分析趋势
+                        </button>
+                    </div>
+
+                    <!-- YouTube认证 -->
+                    <div id="youtube-auth" class="border-t pt-4">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">YouTube认证</h3>
+                        <div class="flex space-x-2">
+                            <button id="get-auth-url" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                                获取认证链接
+                            </button>
+                            <input id="auth-code" type="text" placeholder="认证码" class="flex-1 px-3 py-2 border border-gray-300 rounded">
+                            <button id="submit-auth" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                                提交认证
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 队列状态 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">队列状态</h2>
+                <div id="queue-stats" class="space-y-3">
+                    <!-- 队列信息将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容生成 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">内容生成</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">生成创意</h3>
+                    <div class="flex space-x-2 mb-4">
+                        <input id="idea-count" type="number" value="5" min="1" max="20" class="w-20 px-3 py-2 border border-gray-300 rounded">
+                        <button id="generate-ideas" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded">
+                            生成创意
+                        </button>
+                    </div>
+                    <div id="ideas-list" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- 创意列表将在这里显示 -->
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">创建视频</h3>
+                    <form id="video-form" class="space-y-3">
+                        <input type="text" id="video-title" placeholder="视频标题" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <textarea id="video-script" placeholder="视频脚本" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                        <input type="text" id="video-tags" placeholder="标签（用逗号分隔）" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded">
+                            创建视频
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日志和通知 -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">系统日志</h2>
+            <div id="logs" class="h-64 overflow-y-auto bg-gray-50 p-4 rounded font-mono text-sm">
+                <!-- 日志信息将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notifications" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
