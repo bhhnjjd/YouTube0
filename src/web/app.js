@@ -12,6 +12,7 @@ const YouTubeAutomation = require('../modules/automation');
 const queueService = require('../services/queue');
 const cacheService = require('../services/cache');
 const metricsService = require('../services/metrics');
+const accountManager = require('../services/youtubeAccountManager');
 const { logger, ErrorHandler } = require('../utils/logger');
 const config = require('../config');
 
@@ -312,8 +313,41 @@ class WebApplication {
       }
     });
 
+    // 获取账户列表
+    router.get('/youtube/accounts', async (req, res) => {
+      try {
+        const accounts = await accountManager.listAccounts();
+        res.json({
+          accounts,
+          active: accountManager.getActiveAccount()
+        });
+      } catch (error) {
+        ErrorHandler.handle(error, 'API: 获取账户列表');
+        res.status(500).json({ error: '获取账户列表失败' });
+      }
+    });
+
+    // 切换活跃账户
+    router.post('/youtube/accounts/switch', [
+      body('name').notEmpty().trim()
+    ], async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+        await accountManager.setActiveAccount(req.body.name);
+        await this.automation.youtubeService.initialize();
+        res.json({ success: true, message: '已切换账户', active: req.body.name });
+      } catch (error) {
+        ErrorHandler.handle(error, 'API: 切换账户');
+        res.status(500).json({ error: '切换账户失败' });
+      }
+    });
+
     router.post('/youtube/authenticate', [
-      body('code').notEmpty().trim()
+      body('code').notEmpty().trim(),
+      body('account').optional().trim()
     ], async (req, res) => {
       try {
         const errors = validationResult(req);
@@ -321,8 +355,8 @@ class WebApplication {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        const { code } = req.body;
-        const success = await this.automation.authenticateYouTube(code);
+        const { code, account = 'default' } = req.body;
+        const success = await this.automation.authenticateYouTube(code, account);
         
         if (success) {
           res.json({ success: true, message: 'YouTube认证成功' });

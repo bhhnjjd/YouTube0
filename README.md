@@ -53,6 +53,7 @@ npm run docker:dev
 - API文档: http://localhost:3000/api
 - 健康检查: http://localhost:3000/health
 - 指标监控: http://localhost:3000/api/metrics
+- 账户管理: http://localhost:3000/api/youtube/accounts
 
 ### 方式二：本地部署
 
