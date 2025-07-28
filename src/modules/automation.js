@@ -39,10 +39,10 @@ class YouTubeAutomation {
     }
   }
 
-  async authenticateYouTube(authCode) {
+  async authenticateYouTube(authCode, account = 'default') {
     try {
-      await this.youtubeService.authenticate(authCode);
-      logger.info('YouTube认证完成');
+      await this.youtubeService.authenticate(authCode, account);
+      logger.info('YouTube认证完成', { account });
       return true;
     } catch (error) {
       ErrorHandler.handle(error, 'YouTube认证失败');

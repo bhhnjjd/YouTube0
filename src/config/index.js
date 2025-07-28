@@ -22,7 +22,9 @@ class Config {
     this.youtube = {
       clientId: process.env.YOUTUBE_CLIENT_ID,
       clientSecret: process.env.YOUTUBE_CLIENT_SECRET,
-      redirectUri: process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+      redirectUri: process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3000/auth/callback',
+      accountsDir: process.env.YOUTUBE_ACCOUNTS_DIR || path.join(process.cwd(), 'youtube_accounts'),
+      activeAccount: process.env.YOUTUBE_ACTIVE_ACCOUNT || 'default'
     };
 
     // 数据库配置

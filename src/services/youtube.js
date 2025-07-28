@@ -1,6 +1,5 @@
 const { google } = require('googleapis');
-const fs = require('fs').promises;
-const path = require('path');
+const accountManager = require('./youtubeAccountManager');
 const { logger, ErrorHandler } = require('../utils/logger');
 const config = require('../config');
 
@@ -20,15 +19,15 @@ class YouTubeService {
         this.credentials.redirectUri
       );
 
-      const tokenPath = path.join(process.cwd(), 'youtube_token.json');
-      
-      try {
-        const tokenData = await fs.readFile(tokenPath, 'utf8');
-        const tokens = JSON.parse(tokenData);
+      const tokens = await accountManager.loadTokens();
+
+      if (tokens) {
         this.oauth2Client.setCredentials(tokens);
         this.isAuthenticated = true;
-        logger.info('YouTube认证信息已加载');
-      } catch (error) {
+        logger.info('YouTube认证信息已加载', {
+          account: accountManager.getActiveAccount()
+        });
+      } else {
         logger.warn('未找到已保存的认证信息，需要重新授权');
       }
 
@@ -54,20 +53,15 @@ class YouTubeService {
     });
   }
 
-  async authenticate(code) {
+  async authenticate(code, account = 'default') {
     return ErrorHandler.safeExecute(async () => {
       const { tokens } = await this.oauth2Client.getToken(code);
       this.oauth2Client.setCredentials(tokens);
-      
-      const tokenPath = path.join(process.cwd(), 'youtube_token.json');
-      await fs.writeFile(
-        tokenPath,
-        JSON.stringify(tokens, null, 2),
-        { mode: 0o600 }
-      );
-      
+
+      await accountManager.saveTokens(account, tokens);
+
       this.isAuthenticated = true;
-      logger.info('YouTube认证成功');
+      logger.info('YouTube认证成功', { account });
       return true;
     }, 'YouTube authenticate');
   }
